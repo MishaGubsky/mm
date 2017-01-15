@@ -37,13 +37,12 @@ class BaseRandom(object):
                 y_pos.append(_1)
                 dz.append(XY_practical[_,_1]/self._n)
         z_pos = np.zeros_like(x_pos)
+        dx = 0.5 * np.ones_like(z_pos)
+        dy = dx.copy()
 
 
         fig = plot.figure()
         ax = fig.add_subplot(111, projection='3d')
-
-        dx = 0.5 * np.ones_like(z_pos)
-        dy = dx.copy()
         ax.bar3d(x_pos, y_pos, z_pos, dx, dy, dz, color='b')
         # ax.bar3d(x_pos, y_pos, z_pos, dx, dy, [5,7,4], color='b', zsort='average', alpha=0.8)
         plot.show()
@@ -75,16 +74,16 @@ class SystemValuesRandom(BaseRandom):
 
 if __name__ == "__main__":
     n=10000
-    X_values = [0.1, 0.2, 0.1, 0.05, 0.15, 0.25, 0.15]
-    Y_values = [2.6, 1.3, 5.7]
+    X_values = [0.1, 0.2, 0.15, 0.1, 0.15, 0.25, 0.15]
+    Y_values = [2.6, 1.3, 5.7, 4.6]
     XY_probabilities = np.array([
-        [0.1, 0.07, 0.04],
-        [0.07, 0.07, 0.04],
-        [0.04, 0.04, 0.04],
-        [0.03, 0.05, 0.04],
-        [0.04, 0.05, 0.03],
-        [0.05, 0.04, 0.04],
-        [0.05, 0.03, 0.03],
+        [0.08, 0.07, 0.04, 0.01],
+        [0.07, 0.07, 0.04, 0.01],
+        [0.04, 0.04, 0.04, 0.01],
+        [0.03, 0.05, 0.04, 0.01],
+        [0.04, 0.04, 0.03, 0.01],
+        [0.04, 0.04, 0.04, 0.01],
+        [0.04, 0.03, 0.03, 0.01],
     ], dtype=float)
     system_generator = SystemValuesRandom(X_values, Y_values, XY_probabilities)
     XY_practical = np.zeros((len(X_values), len(Y_values)))
