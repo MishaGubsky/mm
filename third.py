@@ -24,9 +24,9 @@ class BaseRandom(object):
         weights = [10.0 / self._n for _ in xrange(self._n)]
         plot.hist(values, self.intervals, weights=weights, facecolor='g', alpha=0.4)
 
-        # x_values = arange(min(values), max(values), 0.001)
-        # y_values = [self.density(x) for x in x_values]
-        # plot.plot(x_values, y_values, color='r', lw=1)
+        x_values = arange(min(values), max(values), 0.001)
+        y_values = [self.density(x) for x in x_values]
+        plot.plot(x_values, y_values, color='r', lw=1)
 
         plot.grid(True)
         plot.show()
@@ -64,6 +64,9 @@ class TriangularRandom(BaseRandom):
         self.a = a
         self.b = b
 
+    def density(self, x):
+        return 2*(x-self.a) / pow(self.b - self.a, 2)
+
     def next(self):
         p, q = self.generator.next(), self.generator.next()
         return self.a + (self.b - self.a) * max(p, q)
@@ -88,7 +91,7 @@ class FunctionRandomTest:
     def test(self):
         ExponentialRandom(1).stats()
         GaussRandom(0, 1).stats()
-        TriangularRandom(0, 2).stats()
+        TriangularRandom(0, 10).stats()
         SimpsonRandom(0, 2).stats()
 
 if __name__ == '__main__':

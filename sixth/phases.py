@@ -16,25 +16,25 @@ class Phase:
         self.queue_lengths = []
         self.states = [[0, 0, 0] for _ in xrange(channels_count)]
 
-    def _update_times(self):
+    def _update_times(self, global_time):
         for channel in self._channels:
             if channel.is_available:
                 continue
             need_to_retrive = channel.update()
             if need_to_retrive:
-                added = self._next.add_task(channel.task)
+                added = self._next.add_task(channel.task, global_time)
                 if added:
                     channel.free()
                 else:
                     channel.block()
 
 
-    def _send_tasks(self):
+    def _send_tasks(self, global_time):
         for channel in self._channels:
             if not channel.is_available and not self._queue.is_empty:
                 channel.add_task(self._queue.pop())
 
-    def _update_stats(self):
+    def _update_stats(self, global_time):
         self.queue_lengths.append(self._queue.size)
         for i, channel in enumerate(self._channels):
             if not channel.is_blocked:
@@ -44,7 +44,7 @@ class Phase:
             else:
                 self.states[i][2] += 1
 
-    def add_task(self, task):
+    def add_task(self, task, global_time):
         free_channel_not_exist = all(not channel.is_available for channel in self._channels)
         if not self._queue.is_available and free_channel_not_exist:
             return False
@@ -57,18 +57,16 @@ class Phase:
         self._queue.add_task(task)
         return True
 
-    def imitate(self):
-        self._update_times()
-        self._send_tasks()
-        self._update_stats()
+    def imitate(self, global_time):
+        self._update_times(global_time)
+        self._send_tasks(global_time)
+        self._update_stats(global_time)
 
-    def stats(self):
+    def stats(self, global_time):
         avg_queue_l = sum(self.queue_lengths) / float(len(self.queue_lengths))
         print "average queue length = {}".format(avg_queue_l)
 
-        import pdb; pdb.set_trace();
-
-        iterations = GLOBAL_TIME / GLOBAL_DELTA
+        iterations = global_time / GLOBAL_DELTA
         msg = "P of states:"
         for i, state in enumerate(self.states):
             blocked_p = state[0] / iterations
@@ -89,17 +87,17 @@ class Sender:
     def add_task(self, task):
         pass
 
-    def imitate(self):
+    def imitate(self, global_time):
         self._next_task -= GLOBAL_DELTA
         if self._next_task <= 0:
             self.total += 1
             self._next_task = expovariate(1)
-            task = Task()
-            added = self._next.add_task(task)
+            task = Task(global_time)
+            added = self._next.add_task(task, global_time)
             if not added:
                 self.rejected.append(task)
 
-    def stats(self):
+    def stats(self, global_time):
         reject_p = len(self.rejected) / float(self.total)
         print "P of rejection: {:.5}".format(reject_p)
 
@@ -109,32 +107,37 @@ class Receiver:
     def __init__(self):
         self.completed = []
 
-    def add_task(self, task):
-        task.received = GLOBAL_TIME
+    def add_task(self, task, global_time):
+        task.received = global_time
         self.completed.append(task)
         return True
 
-    def imitate(self):
+    def imitate(self, global_time):
         pass
 
-    def stats(self):
+    def stats(self, global_time):
         completed = self.completed
         intervals = []
+
         for i in xrange(1, len(completed)):
             intervals.append(abs(completed[i].received - completed[i - 1].received))
-        plot.hist(intervals, bins=50)
-        plot.show()
 
         e = sum(intervals) / float(len(intervals))
         d = sum(((i - e) ** 2) for i in intervals) / len(intervals)
         print "Mo intervals between orders: {:.5}".format(e)
         print "D intervals between orders: {:.5}".format(d)
 
-        process_times = [t.received - t.created for t in completed]
-        plot.hist(process_times, bins=50)
+        plot.hist(intervals, bins=50)
+        plot.title('Intervals between orders, M = {}, D = {}'.format(round(e, 4), round(d, 4)))
         plot.show()
+
+        process_times = [t.received - t.created for t in completed]
 
         e = sum(process_times) / len(process_times)
         d = sum(((i - e) ** 2) for i in process_times) / len(process_times)
         print "Mo order processing time: {:.5}".format(e)
         print "D order processing time: {:.5}".format(d)
+
+        plot.hist(process_times, bins=50)
+        plot.title('Order processing time: M = {}, D = {}'.format(round(e, 4), round(d, 4)))
+        plot.show()

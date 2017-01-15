@@ -32,8 +32,6 @@ class Queue:
 
     def add_task(self, task):
         if len(self._tasks) >= self._capacity:
-            import pdb; pdb.set_trace();
-
             raise 'Queue is overflow'
         self._tasks.append(task)
         if len(self._tasks) >= self._capacity:

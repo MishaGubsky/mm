@@ -37,7 +37,7 @@ class Channel:
 
     def update(self):
         if self._task:
-            self._task.t -= GLOBAL_DELTA
+            self._task.t = self._task.t - GLOBAL_DELTA
             if self._task.t <= 0:
                 return True
         return False
