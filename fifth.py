@@ -42,10 +42,9 @@ class BaseRandom(object):
         fig = plot.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        dx = 0.3 * np.ones_like(z_pos)
+        dx = 0.5 * np.ones_like(z_pos)
         dy = dx.copy()
-        # dz = hist.flatten()
-        ax.bar3d(x_pos, y_pos, z_pos, dx, dy, dz, color='b', zsort='average', alpha=0.8)
+        ax.bar3d(x_pos, y_pos, z_pos, dx, dy, dz, color='b')
         # ax.bar3d(x_pos, y_pos, z_pos, dx, dy, [5,7,4], color='b', zsort='average', alpha=0.8)
         plot.show()
 
