@@ -7,7 +7,8 @@ from matplotlib import pyplot as plot
 
 class Phase:
 
-    def __init__(self, channels_count, generator, queue_length, next_phase):
+    def __init__(self, channels_count, generator, queue_length, next_phase, function_log_callback):
+        self.function_log_callback = function_log_callback
         self._queue_length = queue_length
         self._random = generator
         self._next = next_phase
@@ -64,7 +65,7 @@ class Phase:
 
     def stats(self, global_time):
         avg_queue_l = sum(self.queue_lengths) / float(len(self.queue_lengths))
-        print "average queue length = {}".format(avg_queue_l)
+        self.function_log_callback("average queue length = {}".format(avg_queue_l))
 
         iterations = global_time / GLOBAL_DELTA
         msg = "P of states:"
@@ -73,12 +74,13 @@ class Phase:
             free_p = state[1] / iterations
             worked_p = state[2] / iterations
             msg = "#{}: blocked: {:.5}, free = {:.5}, processing = {:.5}"
-            print msg.format(i, blocked_p, free_p, worked_p)
+            self.function_log_callback(msg.format(i, blocked_p, free_p, worked_p))
 
 
 class Sender:
 
-    def __init__(self, next_phase):
+    def __init__(self, next_phase, function_log_callback):
+        self.function_log_callback = function_log_callback
         self._next = next_phase
         self._next_task = 0
         self.rejected = []
@@ -99,13 +101,15 @@ class Sender:
 
     def stats(self, global_time):
         reject_p = len(self.rejected) / float(self.total)
-        print "P of rejection: {:.5}".format(reject_p)
+        self.function_log_callback("P of rejection: {:.5}".format(reject_p))
 
 
 class Receiver:
 
-    def __init__(self):
+    def __init__(self, function_draw_callback, function_log_callback):
         self.completed = []
+        self.function_log_callback = function_log_callback
+        self.function_draw_callback = function_draw_callback
 
     def add_task(self, task, global_time):
         task.received = global_time
@@ -124,20 +128,27 @@ class Receiver:
 
         e = sum(intervals) / float(len(intervals))
         d = sum(((i - e) ** 2) for i in intervals) / len(intervals)
-        print "Mo intervals between orders: {:.5}".format(e)
-        print "D intervals between orders: {:.5}".format(d)
+        self.function_log_callback("Mo intervals between orders: {:.5}".format(e))
+        self.function_log_callback("D intervals between orders: {:.5}".format(d))
 
-        plot.hist(intervals, bins=50)
-        plot.title('Intervals between orders, M = {}, D = {}'.format(round(e, 4), round(d, 4)))
-        plot.show()
+        # self.plot.hist(intervals, bins=50)
+        intervals_params = (intervals, e, d)
+
+        # self.plot.title('Intervals between orders, M = {}, D = {}'.format(round(e, 4), round(d, 4)))
+        # self.plot.show()
 
         process_times = [t.received - t.created for t in completed]
 
         e = sum(process_times) / len(process_times)
         d = sum(((i - e) ** 2) for i in process_times) / len(process_times)
-        print "Mo order processing time: {:.5}".format(e)
-        print "D order processing time: {:.5}".format(d)
+        self.function_log_callback("Mo order processing time: {:.5}".format(e))
+        self.function_log_callback("D order processing time: {:.5}".format(d))
 
-        plot.hist(process_times, bins=50)
-        plot.title('Order processing time: M = {}, D = {}'.format(round(e, 4), round(d, 4)))
-        plot.show()
+        # self.plot1.hist(process_times, bins=50)
+
+        process_times_params = (process_times, e, d)
+
+
+        self.function_draw_callback(intervals_params,process_times_params)
+        # plot.title('Order processing time: M = {}, D = {}'.format(round(e, 4), round(d, 4)))
+        # plot.show()

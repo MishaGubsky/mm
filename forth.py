@@ -17,7 +17,7 @@ class DiscreteRandom(BaseRandom):
 
 if __name__ == '__main__':
     P = [0.162, 0.323, 0.291, 0.155, 0.054, 0.013, 0.002]
-    if sum(p) > 1:
+    if sum(P) > 1:
         raise AttributeError(" >1!!!!")
     y = range(len(P))
     generator = DiscreteRandom(y, P)
